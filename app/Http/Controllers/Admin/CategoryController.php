@@ -22,7 +22,6 @@ class CategoryController extends Controller
 
     public function changeStatus(Request $request)
     {
-        dd($request->all());
         $request->validate([
             "id" => ["required", "integer"],
         ]);

@@ -70,8 +70,7 @@
     </x-bootstrap.card>
     <form action="" method="POST" id="statusChangeForm">
         @csrf
-        <input type="hidden" name="id" id=inputStatus" value="">
-        <input type="hidden" name="idValue" id=idValue" value="0">
+        <input type="hidden" name="id" id="inputStatus" value="">
     </form>
 @endsection
 
@@ -93,8 +92,7 @@
                     /* Read more about isConfirmed, isDenied below */
                     if (result.isConfirmed) {
                         $('#statusChangeForm').attr("action", "{{ route('categories.changeStatus') }}");
-                        $('#idValue').val("1");
-                       // $('#statusChangeForm').submit();
+                        $('#statusChangeForm').submit();
                     } else if (result.isDenied) {
                         Swal.fire({
                             title: "Bilgi",
