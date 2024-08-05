@@ -49,9 +49,9 @@
                             </td>
                             <td>
                                 @if($category->feature_status)
-                                    Aktif
+                                    <a href="javascript:void(0)" data-id="{{ $category->id }}" class="btn btn-success btn-sm btnChangeFeatureStatus">Aktif</a>
                                 @else
-                                    Pasif
+                                    <a href="javascript:void(0)" data-id="{{ $category->id }}" class="btn btn-danger btn-sm btnChangeFeatureStatus">Pasif</a>
                                 @endif
                             </td>
                             <td>{{ substr($category->description, 0, 20) }}</td>
@@ -59,13 +59,21 @@
                             <td>{{ $category->parentCategory?->name }}</td>
                             <td>{{ $category->user?->name }}</td>
                             <td>
-                                <a href="javascript:void(0)" class="btn btn-warning"><i class="material-icons ms-0">edit</i></a>
-                                <a href="javascript:void(0)" class="btn btn-danger"><i class="material-icons ms-0">delete</i></a>
+                                <a href="{{ route("categories.edit", ["id" => $category->id]) }}" class="btn btn-warning btn-sm"><i class="material-icons ms-0">edit</i></a>
+                                <a href="javascript:void(0)" class="btn btn-danger btn-sm btnDelete"
+                                   data-name="{{ $category->name }}"
+                                   data-id="{{ $category->id }}">
+                                    <i class="material-icons ms-0">delete</i>
+                                </a>
                             </td>
                         </tr>
                     @endforeach
                 </x-slot:rows>
             </x-bootstrap.table>
+            <div class="d-flex justify-content-center">
+{{--                {{ $list->links("vendor.pagination.bootstrap-5") }}--}}
+                {{ $list->onEachside(1)->links() }}
+            </div>
         </x-slot:body>
     </x-bootstrap.card>
     <form action="" method="POST" id="statusChangeForm">
@@ -92,6 +100,61 @@
                     /* Read more about isConfirmed, isDenied below */
                     if (result.isConfirmed) {
                         $('#statusChangeForm').attr("action", "{{ route('categories.changeStatus') }}");
+                        $('#statusChangeForm').submit();
+                    } else if (result.isDenied) {
+                        Swal.fire({
+                            title: "Bilgi",
+                            text: "Herhangi bir işlem yapılmadı",
+                            confirmButtonText: "Evet",
+                            icon: "info"
+                        })
+                    }
+                });
+            })
+
+            $('.btnChangeFeatureStatus').click(function () {
+                let categoryID = $(this).data('id');
+                $('#inputStatus').val(categoryID);
+
+                Swal.fire({
+                    title: "Feature Status değiştirmek istediğinize emin misiniz?",
+                    showDenyButton: true,
+                    showCancelButton: true,
+                    confirmButtonText: "Evet",
+                    denyButtonText: "Hayır",
+                    cancelButtonText: "İptal"
+                }).then((result) => {
+                    /* Read more about isConfirmed, isDenied below */
+                    if (result.isConfirmed) {
+                        $('#statusChangeForm').attr("action", "{{ route('categories.changeFeatureStatus') }}");
+                        $('#statusChangeForm').submit();
+                    } else if (result.isDenied) {
+                        Swal.fire({
+                            title: "Bilgi",
+                            text: "Herhangi bir işlem yapılmadı",
+                            confirmButtonText: "Evet",
+                            icon: "info"
+                        })
+                    }
+                });
+            })
+
+            $('.btnDelete').click(function () {
+                let categoryID = $(this).data('id');
+                let categoryName = $(this).data('name');
+                $('#inputStatus').val(categoryID);
+
+                Swal.fire({
+                    title: categoryName + " silmek istediğinize emin misiniz?",
+                    showDenyButton: true,
+                    showCancelButton: true,
+                    confirmButtonText: "Evet",
+                    denyButtonText: "Hayır",
+                    cancelButtonText: "İptal"
+                }).then((result) => {
+                    /* Read more about isConfirmed, isDenied below */
+                    if (result.isConfirmed) {
+                        $('#statusChangeForm').attr("action", "{{ route('categories.delete') }}");
                         $('#statusChangeForm').submit();
                     } else if (result.isDenied) {
                         Swal.fire({
