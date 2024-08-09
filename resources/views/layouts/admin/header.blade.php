@@ -67,12 +67,32 @@
                             <a class="nav-link toggle-search" href="#"><i class="material-icons">search</i></a>
                         </li>
                     @endif
+
+                    <li class="nav-item hidden-on-mobile" style="display: none;">
+                        <a class="nav-link language-dropdown-toggle" href="#"
+                                                      id="languageDropDown"
+                           data-bs-toggle="dropdown">
+                                                        <img src="assets/admin/images/flags/us.png" alt="">
+{{--                            Çıkış Yap--}}
+                        </a>
+                                                <ul class="dropdown-menu dropdown-menu-end language-dropdown" aria-labelledby="languageDropDown">
+                                                    <li><a class="dropdown-item" href="#">Çıkış Yap</a></li>
+                                                </ul>
+                    </li>
+
                     <li class="nav-item hidden-on-mobile">
-                        <a class="nav-link language-dropdown-toggle" href="#" id="languageDropDown" data-bs-toggle="dropdown"><img src="../assets/images/flags/us.png" alt=""></a>
+                        <a class="nav-link language-dropdown-toggle" href="#"
+                           id="languageDropDown"
+                           data-bs-toggle="dropdown">
+                           {{ auth()->user()->name }}
+                        </a>
                         <ul class="dropdown-menu dropdown-menu-end language-dropdown" aria-labelledby="languageDropDown">
-                            <li><a class="dropdown-item" href="#"><img src="../assets/images/flags/germany.png" alt="">German</a></li>
-                            <li><a class="dropdown-item" href="#"><img src="../assets/images/flags/italy.png" alt="">Italian</a></li>
-                            <li><a class="dropdown-item" href="#"><img src="../assets/images/flags/china.png" alt="">Chinese</a></li>
+                            <li>
+                                <a class="dropdown-item" href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Çıkış Yap</a>
+                            </li>
+                            <form action="{{ route("logout") }}" method="POST" id="logout-form">
+                                @csrf
+                            </form>
                         </ul>
                     </li>
                     <li class="nav-item hidden-on-mobile">
@@ -123,7 +143,7 @@
                                     <div class="notifications-dropdown-item">
                                         <div class="notifications-dropdown-item-image">
                                                         <span class="notifications-badge">
-                                                            <img src="../assets/images/avatars/avatar.png" alt="">
+                                                            <img src="assets/admin/images/avatars/avatar.png" alt="">
                                                         </span>
                                         </div>
                                         <div class="notifications-dropdown-item-text">
@@ -136,7 +156,7 @@
                                     <div class="notifications-dropdown-item">
                                         <div class="notifications-dropdown-item-image">
                                                         <span class="notifications-badge">
-                                                            <img src="../assets/images/avatars/avatar.png" alt="">
+                                                            <img src="assets/admin/images/avatars/avatar.png" alt="">
                                                         </span>
                                         </div>
                                         <div class="notifications-dropdown-item-text">
