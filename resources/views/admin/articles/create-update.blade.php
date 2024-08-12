@@ -111,6 +111,10 @@
                         <input type="file" name="image" id="image" class="form-control" accept="image/png, image/jpeg, image/jpg">
                         <div class="form-text m-b-sm">Makale görseli maksimum 2 mb olmalıdır</div>
 
+                        @if(isset($article) && $article->image)
+                            <img src="{{ $article->image }}" alt="" class="img-fluid" style="max-height: 200px">
+                        @endif
+
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" value="1" id="status" {{ isset($article) && $article->status ? "checked" : "" }}>
                             <label class="form-check-label" for="status">
