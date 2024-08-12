@@ -105,14 +105,19 @@
                         >{{ isset($article) ? $article->seo_description : "" }}</textarea>
 
                         <label for="publish_date" class="form-label">Yayınlanma Tarihi</label>
-                        <input type="text" class="form-control flatpickr2 m-b-sm" id="publish_date" name="publish_date" placeholder="Ne zaman yayınlansın?">
+                        <input type="text"
+                               class="form-control flatpickr2 m-b-sm"
+                               id="publish_date"
+                               name="publish_date"
+                               value="{{ isset($article) ? $article->publish_date : "" }}"
+                               placeholder="Ne zaman yayınlansın?">
 
                         <label for="image" class="form-label">Makale Görseli</label>
                         <input type="file" name="image" id="image" class="form-control" accept="image/png, image/jpeg, image/jpg">
                         <div class="form-text m-b-sm">Makale görseli maksimum 2 mb olmalıdır</div>
 
                         @if(isset($article) && $article->image)
-                            <img src="{{ $article->image }}" alt="" class="img-fluid" style="max-height: 200px">
+                            <img src="{{ asset($article->image) }}" alt="" class="img-fluid" style="max-height: 200px">
                         @endif
 
                         <div class="form-check">
