@@ -4,14 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ArticleCreateRequest;
+use App\Http\Requests\ArticleFilterRequest;
 use App\Http\Requests\ArticleUpdateRequest;
 use App\Models\Article;
 use App\Models\Category;
 use App\Models\User;
 use Illuminate\Http\File;
 use Illuminate\Http\Request;
-use Illuminate\Routing\Controllers;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ArticleController extends \Illuminate\Routing\Controller
@@ -21,9 +20,27 @@ class ArticleController extends \Illuminate\Routing\Controller
 //        $this->middleware("language");
 //    }
 
-    public function index()
+    public function index(ArticleFilterRequest $request)
     {
-        return view('admin.articles.list');
+//        dd($request->all());
+        $users = User::all();
+        $categories = Category::all();
+
+        $list = Article::query()
+            ->with("category", "user")
+            ->where(function ($query) use ($request) {
+                $query->orWhere("title", "LIKE", "%" . $request->search_text . "%")
+                      ->orWhere("slug", "LIKE", "%" . $request->search_text . "%")
+                      ->orWhere("body", "LIKE", "%" . $request->search_text . "%")
+                      ->orWhere("tags", "LIKE", "%" . $request->search_text . "%");
+            })
+            ->status($request->status)
+            ->category($request->category_id)
+            ->user($request->user_id)
+            ->publishDate($request->publish_date)
+            ->paginate(5);
+
+        return view('admin.articles.list', compact('list', 'users', 'categories'));
     }
 
     public function create()
@@ -138,24 +155,16 @@ class ArticleController extends \Illuminate\Routing\Controller
 
         $data['slug'] = $slug;
 
-        $imageFile = $request->file("image");
-        $originalName = $imageFile->getClientOriginalName();
-        $originalExtension = $imageFile->getClientOriginalExtension();
-        $explodeName = explode(".", $originalName)[0];
-        $fileName = Str::slug($explodeName) . "." . $originalExtension;
-
-        $folder = "articles";
-        $publicPath = "storage/" . $folder;
         if (!is_null($request->image))
         {
-//            $imageFile = $request->file("image");
-//            $originalName = $imageFile->getClientOriginalName();
-//            $originalExtension = $imageFile->getClientOriginalExtension();
-//            $explodeName = explode(".", $originalName)[0];
-//            $fileName = Str::slug($explodeName) . "." . $originalExtension;
+            $imageFile = $request->file("image");
+            $originalName = $imageFile->getClientOriginalName();
+            $originalExtension = $imageFile->getClientOriginalExtension();
+            $explodeName = explode(".", $originalName)[0];
+            $fileName = Str::slug($explodeName) . "." . $originalExtension;
 
-//            $folder = "articles";
-//            $publicPath = "storage/" . $folder;
+            $folder = "articles";
+            $publicPath = "storage/" . $folder;
 
 
             if (file_exists(public_path($publicPath . $fileName)))
