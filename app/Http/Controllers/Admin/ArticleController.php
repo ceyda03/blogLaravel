@@ -12,6 +12,7 @@ use App\Models\User;
 use Illuminate\Http\File;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Http\JsonResponse;
 
 class ArticleController extends \Illuminate\Routing\Controller
 {
@@ -22,7 +23,6 @@ class ArticleController extends \Illuminate\Routing\Controller
 
     public function index(ArticleFilterRequest $request)
     {
-//        dd($request->all());
         $users = User::all();
         $categories = Category::all();
 
@@ -38,6 +38,28 @@ class ArticleController extends \Illuminate\Routing\Controller
             ->category($request->category_id)
             ->user($request->user_id)
             ->publishDate($request->publish_date)
+            ->where(function($query) use ($request)
+            {
+                if ($request->min_view_count)
+                {
+                    $query->where("view_count", ">=", (int)$request->min_view_count);
+                }
+
+                if ($request->max_view_count)
+                {
+                    $query->where("view_count", "<=", (int)$request->max_view_count);
+                }
+
+                if ($request->min_like_count)
+                {
+                    $query->where("like_count", ">=", (int)$request->min_like_count);
+                }
+
+                if ($request->min_view_count)
+                {
+                    $query->where("like_count", "<=", (int)$request->max_like_count);
+                }
+            })
             ->paginate(5);
 
         return view('admin.articles.list', compact('list', 'users', 'categories'));
@@ -55,7 +77,7 @@ class ArticleController extends \Illuminate\Routing\Controller
         $imageFile = $request->file("image");
         $originalName = $imageFile->getClientOriginalName();
         $originalExtension = $imageFile->getClientOriginalExtension();
-//        $originalExtension = $imageFile->extension();
+        //$originalExtension = $imageFile->extension();
         $explodeName = explode(".", $originalName)[0];
         $fileName = Str::slug($explodeName) . "." . $originalExtension;
 
@@ -99,7 +121,7 @@ class ArticleController extends \Illuminate\Routing\Controller
 
         Article::create($data);
         $imageFile->storeAs($folder, $fileName);
-//        $imageFile->store("articles", "public");
+        //$imageFile->store("articles", "public");
 
         alert()->success("Başarılı", "Makale Kaydedildi")->showConfirmButton("Tamam", "#3085d6")->autoClose(5000);
         return redirect()->back();
@@ -107,8 +129,8 @@ class ArticleController extends \Illuminate\Routing\Controller
 
     public function edit(Request $request, int $articleID)
     {
-//        $article = Article::find($articleID);
-//        $article = Article::where("id", $articleID)->firstOrFail();
+        //$article = Article::find($articleID);
+        //$article = Article::where("id", $articleID)->firstOrFail();
         $article = Article::query()
                             ->where("id", $articleID)
                             ->first();
@@ -204,5 +226,50 @@ class ArticleController extends \Illuminate\Routing\Controller
     public function slugCheck(string $text)
     {
         return Article::where("slug", $text)->first();
+    }
+
+    public function changeStatus(Request $request): JsonResponse
+    {
+        $articleID = $request->articleID;
+
+        $article = Article::query()
+            ->where("id", $articleID)
+            ->first();
+
+        if($article)
+        {
+            $article->status = $article->status ? 0 : 1;
+            $article->save();
+
+            return response()
+                ->json(['status' => "success", "message" => "Başarılı", "data" => $article, "article_status" => $article->status])
+                ->setStatusCode(200);
+        }
+
+        return response()
+            ->json(['status' => "success", "message" => "Makale Bulunamadı"])
+            ->setStatusCode(404);
+    }
+
+    public function delete(Request $request)
+    {
+        $articleID = $request->articleID;
+
+        $article = Article::query()
+            ->where("id", $articleID)
+            ->first();
+
+        if($article)
+        {
+            $article->delete();
+
+            return response()
+                ->json(['status' => "success", "message" => "Başarılı", "data" => ""])
+                ->setStatusCode(200);
+        }
+
+        return response()
+            ->json(['status' => "success", "message" => "Makale Bulunamadı"])
+            ->setStatusCode(404);
     }
 }

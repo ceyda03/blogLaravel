@@ -28,7 +28,7 @@
                         <select class="js-states form-control" tabindex="-1" id="selectParentCategory" name="category_id" style="display: none; width: 100%;" >
                             <option value="{{ null }}">Kategori Seçin</option>
                             @foreach($categories as $parent)
-                                <option value="{{ $parent->id }}" {{ request()->get("parent_id") == $parent->id ? "selected" : "" }}>{{ $parent->name }}</option>
+                                <option value="{{ $parent->id }}" {{ request()->get("category_id") == $parent->id ? "selected" : "" }}>{{ $parent->name }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -111,7 +111,7 @@
 
                 <x-slot:rows>
                     @foreach($list as $article)
-                        <tr>
+                        <tr id="row-{{ $article->id }}">
                             <td>
                                 @if(!empty($article->image))
                                     <img src="{{ asset($article->image) }}" height="100" class="img-fluid">
@@ -135,9 +135,10 @@
                             <td>{{ $article->view_count }}</td>
                             <td>{{ $article->like_count }}</td>
                             <td>{{ $article->category->name }}</td>
+                            <td>{{ \Carbon\Carbon::parse($article->publish_date)->translatedFormat("d F Y H:i:s") }}</td>
                             <td>{{ $article->user->name }}</td>
                             <td>
-                                <a href="javascript:void(0)" class="btn btn-warning btn-sm"><i class="material-icons ms-0">edit</i></a>
+                                <a href="{{ route("article.edit", ['id' => $article->id]) }}" class="btn btn-warning btn-sm"><i class="material-icons ms-0">edit</i></a>
                                 <a href="javascript:void(0)" class="btn btn-danger btn-sm btnDelete"
                                    data-name="{{ $article->title }}"
                                    data-id="{{ $article->id }}">
@@ -149,21 +150,10 @@
                 </x-slot:rows>
             </x-bootstrap.table>
             <div class="d-flex justify-content-center">
-                {{--                {{ $list->links("vendor.pagination.bootstrap-5") }}--}}
-                {{--                {{ $list->onEachside(1)->links() }}--}}
-                {{--                @php--}}
-                {{--                    $filterArray = ["name" => request()->get("name"), "description" => request()->get("description")]--}}
-                {{--                @endphp--}}
-                {{--                {{ $list->appends($filterArray)->onEachside(2)->links() }}--}}
-                {{--                {{ $list->appends($_GET)->onEachside(2)->links() }}--}}
                 {{ $list->appends(request()->all())->onEachside(2)->links() }}
             </div>
         </x-slot:body>
     </x-bootstrap.card>
-    <form action="" method="POST" id="statusChangeForm">
-        @csrf
-        <input type="hidden" name="id" id="inputStatus" value="">
-    </form>
 @endsection
 
 @section("js")
@@ -176,8 +166,8 @@
     <script>
         $(document).ready(function () {
             $('.btnChangeStatus').click(function () {
-                let categoryID = $(this).data('id');
-                $('#inputStatus').val(categoryID);
+                let articleID = $(this).data('id');
+                let self = $(this);
 
                 Swal.fire({
                     title: "Status değiştirmek istediğinize emin misiniz?",
@@ -189,36 +179,40 @@
                 }).then((result) => {
                     /* Read more about isConfirmed, isDenied below */
                     if (result.isConfirmed) {
-                        $('#statusChangeForm').attr("action", "{{ route('categories.changeStatus') }}");
-                        $('#statusChangeForm').submit();
-                    } else if (result.isDenied) {
-                        Swal.fire({
-                            title: "Bilgi",
-                            text: "Herhangi bir işlem yapılmadı",
-                            confirmButtonText: "Evet",
-                            icon: "info"
-                        })
+                        $.ajax({
+                            method:"POST",
+                            url: "{{ route('article.changeStatus') }}",
+                            data: {
+                                articleID : articleID
+                            },
+                            async: false,
+                            success: function(data) {
+                                if(data.article_status)
+                                {
+                                    self.removeClass("btn-danger");
+                                    self.addClass("btn-success");
+                                    self.text("Aktif");
+                                }
+                                else
+                                {
+                                    self.removeClass("btn-success");
+                                    self.addClass("btn-danger");
+                                    self.text("Pasif");
+                                }
+
+                                Swal.fire({
+                                    title: "Başarılı",
+                                    text: "Status Güncellendi",
+                                    confirmButtonText: "Tamam",
+                                    icon: "success"
+                                })
+                            },
+                            error: function() {
+                                console.log("hata");
+                            }
+                        });
                     }
-                });
-            })
-
-            $('.btnChangeFeatureStatus').click(function () {
-                let categoryID = $(this).data('id');
-                $('#inputStatus').val(categoryID);
-
-                Swal.fire({
-                    title: "Feature Status değiştirmek istediğinize emin misiniz?",
-                    showDenyButton: true,
-                    showCancelButton: true,
-                    confirmButtonText: "Evet",
-                    denyButtonText: "Hayır",
-                    cancelButtonText: "İptal"
-                }).then((result) => {
-                    /* Read more about isConfirmed, isDenied below */
-                    if (result.isConfirmed) {
-                        $('#statusChangeForm').attr("action", "{{ route('categories.changeFeatureStatus') }}");
-                        $('#statusChangeForm').submit();
-                    } else if (result.isDenied) {
+                    else if (result.isDenied) {
                         Swal.fire({
                             title: "Bilgi",
                             text: "Herhangi bir işlem yapılmadı",
@@ -230,12 +224,11 @@
             })
 
             $('.btnDelete').click(function () {
-                let categoryID = $(this).data('id');
-                let categoryName = $(this).data('name');
-                $('#inputStatus').val(categoryID);
+                let articleID = $(this).data('id');
+                let articleName = $(this).data('name');
 
                 Swal.fire({
-                    title: categoryName + " silmek istediğinize emin misiniz?",
+                    title: articleName + " silmek istediğinize emin misiniz?",
                     showDenyButton: true,
                     showCancelButton: true,
                     confirmButtonText: "Evet",
@@ -244,8 +237,28 @@
                 }).then((result) => {
                     /* Read more about isConfirmed, isDenied below */
                     if (result.isConfirmed) {
-                        $('#statusChangeForm').attr("action", "{{ route('categories.delete') }}");
-                        $('#statusChangeForm').submit();
+                        $.ajax({
+                            method:"POST",
+                            url: "{{ route('article.delete') }}",
+                            data: {
+                                "_method": "DELETE",
+                                articleID : articleID
+                            },
+                            async: false,
+                            success: function(data) {
+                                $('#row-' + articleID).remove();
+
+                                Swal.fire({
+                                    title: "Bilgi",
+                                    text: "Makale Silindi",
+                                    confirmButtonText: "Evet",
+                                    icon: "info"
+                                })
+                            },
+                            error: function() {
+                                console.log("hata");
+                            }
+                        });
                     } else if (result.isDenied) {
                         Swal.fire({
                             title: "Bilgi",
